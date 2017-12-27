@@ -16,10 +16,13 @@
 package com.alibaba.druid.bvt.sql.mysql.select;
 
 import com.alibaba.druid.sql.MysqlTest;
+import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLCommentHint;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import com.alibaba.druid.sql.parser.SQLParserFeature;
+import com.alibaba.druid.sql.visitor.VisitorFeature;
 
 import java.util.List;
 
@@ -45,5 +48,42 @@ public class MySqlSelectTest_92 extends MysqlTest {
                 "\tOR cfgdatasou0_.type = ?\n" +
                 "\tAND cfgdatasou0_.module_name = ?\n" +
                 "\tAND cfgdatasou0_.node_type = ?", stmt.toString());
+    }
+
+    public void test_1() throws Exception {
+        String sql = "INSERT INTO brand_crm_ship.imp_order_lock \n" + "            (tid, \n" + "             pid, \n"
+                     + "             __aid, \n" + "             pv) SELECT 121, \n" + "       48868196, \n"
+                     + "       t2.__aid, \n" + "       t3.pv \n" + "FROM   (SELECT DISTINCT __aid \n"
+                     + "        FROM   (SELECT DISTINCT \n"
+                     + "       brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.__aid \n"
+                     + "       AS __aid \n"
+                     + "       FROM   brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump \n"
+                     + "       WHERE \n" + "( \n" + "( \n"
+                     + "brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.label_list_interest IN ( '1142' )\n"
+                     + "AND brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.user_age IN \n" + "( \n"
+                     + "'4', '3', '2', '1' ) \n" + "AND \n"
+                     + "brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.label_list_basic IN ( '1605', '1603', '1604', '1563' ) )\n"
+                     + "AND NOT (brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.label_list_industry IN ( '1140' )) )) t1) t2\n"
+                     + "JOIN (SELECT __aid, \n" + "             pv \n"
+                     + "      FROM   brand_crm_ship.palgo_o2o_imp_px_log_sample_adzone_aid_merge \n"
+                     + "      WHERE  adzone_id = 48868196) t3 \n" + "  ON t3.__aid = t2.__aid ";
+
+        MySqlStatementParser parser = new MySqlStatementParser(sql);
+        List<SQLStatement> statementList = parser.parseStatementList();
+
+        assertEquals(1, statementList.size());
+        String s = SQLUtils.toMySqlString(statementList.get(0), VisitorFeature.OutputKeepParenthesisWhenNotExpr, VisitorFeature.OutputPrettyFormat);
+        assertEquals("insert into brand_crm_ship.imp_order_lock (tid, pid, __aid, pv)\n"
+                     + "select 121, 48868196, t2.__aid, t3.pv\n" + "from (\n" + "\tselect distinct __aid\n"
+                     + "\tfrom (\n"
+                     + "\t\tselect distinct brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.__aid as __aid\n"
+                     + "\t\tfrom brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump\n"
+                     + "\t\twhere brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.label_list_interest in ('1142')\n"
+                     + "\t\t\tand brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.user_age in ('4', '3', '2', '1')\n"
+                     + "\t\t\tand brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.label_list_basic in ('1605', '1603', '1604', '1563')\n"
+                     + "\t\t\tand not (brand_crm_ship.alimama_ecpm_algo_brand_display_ad_label_out_dump.label_list_industry in ('1140'))\n"
+                     + "\t) t1\n" + ") t2\n" + "\tjoin (\n" + "\t\tselect __aid, pv\n"
+                     + "\t\tfrom brand_crm_ship.palgo_o2o_imp_px_log_sample_adzone_aid_merge\n"
+                     + "\t\twhere adzone_id = 48868196\n" + "\t) t3\n" + "\ton t3.__aid = t2.__aid", s);
     }
 }

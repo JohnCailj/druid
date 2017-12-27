@@ -1528,12 +1528,12 @@ public class SQLASTOutputVisitor extends SQLASTVisitorAdapter implements Paramet
             needQuote = binaryOpExpr.getOperator().isLogical();
         }
 
-        if (needQuote) {
+        if (needQuote || isEnabled(VisitorFeature.OutputKeepParenthesisWhenNotExpr)) {
             print('(');
         }
         printExpr(expr);
 
-        if (needQuote) {
+        if (needQuote || isEnabled(VisitorFeature.OutputKeepParenthesisWhenNotExpr)) {
             print(')');
         }
         return false;
